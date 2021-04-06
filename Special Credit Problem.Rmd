@@ -1,0 +1,398 @@
+---
+title: "ISE 539: Special Credit Problem"
+author: "Yan Xuan 5762411409"
+date: "April 6, 2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+----------------------------------------------------------------------------------------------------------------
+              
+         
+Initialize p<sub>i</sub> for each element i, where i=1,2,...10.
+```{r}
+n=100
+set.seed(1)
+u1=runif(10)
+p=u1/sum(u1)
+elements=seq(1:10)
+p_order=sort(p,decreasing=TRUE)
+elements_order=order(p,decreasing=TRUE)
+list_initial=sample(1:10,10,replace=FALSE)
+```
+
+Functions of list problem when reordering is not applied:
+```{r}
+list_problem_direct<-function(p=p, elements=elements,list_initial=list_initial, 
+                              rule="interchange",var_reduce="control"){
+  u2=runif(100)
+  u2_anti=1-u2
+  X=0
+  X_anti=0
+  Y=sum(u2)
+  if (rule=="interchange"){
+    list_interchange=list_initial
+    for (i in 1:100){
+      p_reordered=p[list_interchange]
+      p_reordered_cum=cumsum(p_reordered)
+      element_request=list_interchange[which(u2[i]<=p_reordered_cum)[1]]
+      position_request=which(list_interchange==element_request)
+      #print(u2[i])
+      #print(p_order_cum)
+      #print(position_request)
+      #print(element_request)
+      if (position_request!=1){
+        list_interchange[position_request]=list_interchange[position_request-1]
+        list_interchange[position_request-1]=element_request
+      }
+      #print(list_interchange)
+      X=X+position_request
+    }
+    if (var_reduce=="control"){
+      result=c(X,Y)
+      return(result)
+    }
+    else if(var_reduce=="antithetic"){
+      list_interchange=list_initial
+      for (i in 1:100){
+        p_reordered=p[list_interchange]
+        p_reordered_cum=cumsum(p_reordered)
+        element_request=list_interchange[which(u2_anti[i]<=p_reordered_cum)[1]]
+        position_request=which(list_interchange==element_request)
+        if (position_request!=1){
+          list_interchange[position_request]=list_interchange[position_request-1]
+          list_interchange[position_request-1]=element_request
+        }
+        X_anti=X_anti+position_request
+      }
+      result=c(X,X_anti)
+      return(result)
+    }
+  }
+  else if (rule=="front"){
+    list_front=list_initial
+    for (i in 1:100){
+      p_reordered=p[list_front]
+      p_reordered_cum=cumsum(p_reordered)
+      element_request=list_front[which(u2[i]<=p_reordered_cum)[1]]
+      position_request=which(list_front==element_request)
+      if (position_request!=1){
+        list_front=c(list_front[position_request],list_front[-position_request])
+      }
+      X=X+position_request
+    }
+    if (var_reduce=="control"){
+      result=c(X,Y)
+      return(result)
+    }
+    else if (var_reduce=="antithetic"){
+      list_front=list_initial
+      for (i in 1:100){
+        p_reordered=p[list_front]
+        p_reordered_cum=cumsum(p_reordered)
+        element_request=list_front[which(u2_anti[i]<=p_reordered_cum)[1]]
+        position_request=which(list_front==element_request)
+        if (position_request!=1){
+          list_front=c(list_front[position_request],list_front[-position_request])
+        }
+        X_anti=X_anti+position_request
+      }
+      result=c(X,X_anti)
+      return(result)
+    }
+  }
+}
+```
+
+Function of list problem when reordering is applied:
+```{r}
+list_problem_reorder<-function(p=p_order, elements=elements_order,list_initial=list_initial,
+                               rule="interchange",var_reduce="control"){
+  p_cum=cumsum(p)
+  u2=runif(100)
+  u2_anti=1-u2
+  X=0
+  X_anti=0
+  Y=sum(u2)
+  if (rule=="interchange"){
+    list_interchange=list_initial
+    for (i in 1:100){
+      element_request=elements[which(u2[i]<=p_cum)[1]]
+      position_request=which(list_interchange==element_request)
+      if (position_request!=1){
+        list_interchange[position_request]=list_interchange[position_request-1]
+        list_interchange[position_request-1]=element_request
+      }
+      #print(element_request)
+      #print(list_interchange)
+      
+      X=X+position_request
+    }
+    if (var_reduce=="control"){
+      result=c(X,Y)
+      return(result)
+    }
+    else if(var_reduce=="antithetic"){
+      list_interchange=list_initial
+      for (i in 1:100){
+        element_request=elements[which(u2_anti[i]<=p_cum)[1]]
+        position_request=which(list_interchange==element_request)
+        if (position_request!=1){
+          list_interchange[position_request]=list_interchange[position_request-1]
+          list_interchange[position_request-1]=element_request
+        }
+        X_anti=X_anti+position_request
+      }
+      result=c(X,X_anti)
+      return(result)
+    }
+  }
+  else if (rule=="front"){
+    list_front=list_initial
+    for (i in 1:100){
+      element_request=elements[which(u2[i]<=p_cum)[1]]
+      position_request=which(list_front==element_request)
+      if (position_request!=1){
+        list_front=c(list_front[position_request],list_front[-position_request])
+      }
+      #print(element_request)
+      #print(list_front)
+      
+      X=X+position_request
+    }
+    if (var_reduce=="control"){
+      result=c(X,Y)
+      return(result)
+    }
+    else if (var_reduce=="antithetic"){
+      list_front=list_initial
+      for (i in 1:100){
+        element_request=elements[which(u2_anti[i]<=p_cum)[1]]
+        position_request=which(list_front==element_request)
+        if (position_request!=1){
+          list_front=c(list_front[position_request],list_front[-position_request])
+        }
+        X_anti=X_anti+position_request
+      }
+      result=c(X,X_anti)
+      return(result)
+    }
+  }
+}
+```
+
+### Problem 1
+Consider the list problem (Ex 9i) . Let n=10. Let V_1, ..., V_{10} be indep uniform (0, 1)  and set p_i = V_i / sum_j V_j.
+
+Let X be the sum of the positions of the first 100 elements requested (N=100).   Use the method in the text to determine  in each period  which element is requested. Let U_j, j=1,...,100  be the random number used to determine which element is requested in period j . Suppose the **interchange rule** is used
+
+(a) Estimate E[X]  based on 10,000 runs, using  Y = sum U_j  as a control variable (its mean is 50) .   Also estimate the variance of the estimator  X + c*(Y - 50) and compare it to estimate of Var(X) 
+
+(b) Estimate E[X] based on 5.000 runs using antithetic variables. In each run the estimator is    E= (X(U_1,...,U_{100}) + X( 1- U_1, ...,1-U_{100}))/2.  estimate the variance of E
+
+(c) Which of control variable or  antithetic gives greater variance reduction.
+
+#### 1. (a)
+```{r}
+X={}
+Y={}
+for (j in 1:n){
+  result=list_problem_direct(p=p, elements=elements,list_initial=list_initial,
+                             rule="interchange",var_reduce="control")
+  X=c(X,result[1])
+  Y=c(Y,result[2])
+}
+estimator_raw=X #raw estimator
+cat(paste('Mean of raw estimator: ', mean(estimator_raw), 
+          '\nVariance of raw estimator: ',var(estimator_raw)))
+```
+Using **control variables** method:
+```{r}
+c=-cov(X,Y)/var(Y)
+estimator_control=X+c*(Y-50) #estimator using interchange rule, control variable method
+cat(paste('Mean of estimator using control variables: ', mean(estimator_control), 
+          '\nVariance of estimator using control variables: ',var(estimator_control)))
+```
+#### 1. (b)
+Using **antithetic variables** method:
+```{r}
+X={}
+X_anti={}
+for (j in 1:(n/2)){
+  result=list_problem_direct(p=p, elements=elements,list_initial=list_initial,
+                             rule="interchange",var_reduce="antithetic")
+  X=c(X,result[1])
+  X_anti=c(X_anti,result[2])
+}
+estimator_anti=(X+X_anti)/2 #estimator using interchange rule, antithetic variable method
+cat(paste('Mean of estimator using antithetic variables: ', mean(estimator_anti), 
+          '\nVariance of estimator using antithetic variables: ',var(estimator_anti)))
+```
+#### 1. (c)
+```{r}
+cat(paste('Variance reduction using control variables: ', paste(round(100*(var(estimator_raw)-var(estimator_control))/var(estimator_raw),2),"%", sep = "" ), 
+          '\nVariance reduction using antithetic variables: ',paste(round(100*(var(estimator_raw)-var(estimator_anti))/var(estimator_raw),2),"%", sep = "")))
+```
+
+**Antithetic variable method** gives greater variance reduction.   
+
+### Problem 2
+Repeat 1, this time assuming the **move to the front rule** is being used.
+
+#### 2. (a)
+```{r}
+X={}
+Y={}
+for (j in 1:n){
+  result=list_problem_direct(p=p, elements=elements,list_initial=list_initial,
+                             rule="front",var_reduce="control")
+  X=c(X,result[1])
+  Y=c(Y,result[2])
+}
+estimator_raw=X #raw estimator
+cat(paste('Mean of raw estimator: ', mean(estimator_raw), 
+          '\nVariance of raw estimator: ',var(estimator_raw)))
+```
+
+Using **control variables** method:
+```{r}
+c=-cov(X,Y)/var(Y)
+estimator_control=X+c*(Y-50) #estimator using move to the front rule, control variable method
+cat(paste('Mean of estimator using control variables: ', mean(estimator_control), '\nVariance of estimator using control variables: ',var(estimator_control)))
+```
+#### 2. (b)
+```{r}
+X={}
+X_anti={}
+for (j in 1:(n/2)){
+  result=list_problem_direct(p=p, elements=elements,list_initial=list_initial,rule="front",var_reduce="antithetic")
+  X=c(X,result[1])
+  X_anti=c(X_anti,result[2])
+}
+estimator_anti=(X+X_anti)/2 #estimator using move to the front rule, antithetic variable method
+cat(paste('Mean of estimator using antithetic variables: ', mean(estimator_anti), '\nVariance of estimator using antithetic variables: ',var(estimator_anti)))
+```
+
+#### 2. (c)   
+```{r}
+cat(paste('Variance reduction using control variables: ', paste(round(100*(var(estimator_raw)-var(estimator_control))/var(estimator_raw),2),"%", sep = "" ), '\nVariance reduction using antithetic variables: ',paste(round(100*(var(estimator_raw)-var(estimator_anti))/var(estimator_raw),2),"%", sep = "")))
+```
+
+**Antithetic variable method** gives greater variance reduction.
+
+
+### Problem 3        
+Here is another way we can try to use variance reduction. In each run start by reordering the p_i  so that  p_1 > p_2 > ... > p_{10}
+
+in each period use U to determine the element requested as follows:
+
+  if  U < p_1  request is for 1
+
+  if p_1 < U < p1 + p_2  request is for 2
+
+  and so on 
+
+Assume **interchange rule** is used and find  (a), (b), (c) as in  Problem 1                        
+                                                                      
+                                                                      
+#### 3. (a)                             
+
+```{r}
+X={}
+Y={}
+for (j in 1:n){
+  result=list_problem_reorder(p=p, elements=elements,list_initial=list_initial,rule="interchange",var_reduce="control")
+  X=c(X,result[1])
+  Y=c(Y,result[2])
+}
+estimator_raw=X #raw estimator(reordering)
+cat(paste('Mean of raw estimator: ', mean(estimator_raw), '\nVariance of raw estimator: ',var(estimator_raw)))
+
+```
+
+Using **control variables** method:
+```{r}
+c=-cov(X,Y)/var(Y)
+estimator_control=X+c*(Y-50)
+#estimator (reordering), using interchange rule, control variable method
+cat(paste('Mean of estimator using control variables: ', mean(estimator_control), '\nVariance of estimator using control variables: ',var(estimator_control)))
+```
+
+#### 3. (b)                   
+
+Using **antithetic variables** method:
+```{r}
+X={}
+X_anti={}
+for (j in 1:(n/2)){
+  result=list_problem_reorder(p=p, elements=elements,list_initial=list_initial,rule="interchange",var_reduce="antithetic")
+  X=c(X,result[1])
+  X_anti=c(X_anti,result[2])
+}
+estimator_anti=(X+X_anti)/2
+#estimator (reordering), using interchange rule, antithetic variable method
+cat(paste('Mean of estimator using antithetic variables: ', mean(estimator_anti), '\nVariance of estimator using antithetic variables: ',var(estimator_anti)))
+```
+#### 3. (c)
+```{r}
+cat(paste('Variance reduction using control variables: ', paste(round(100*(var(estimator_raw)-var(estimator_control))/var(estimator_raw),2),"%", sep = "" ), '\nVariance reduction using antithetic variables: ',paste(round(100*(var(estimator_raw)-var(estimator_anti))/var(estimator_raw),2),"%", sep = "")))
+```
+
+**Antithetic variable method** gives greater variance reduction.
+
+### Problem 4    
+Repeat 3, this time assuming the **move to the front rule** is being used.
+
+#### 4. (a)
+```{r}
+X={}
+Y={}
+for (j in 1:n){
+  result=list_problem_reorder(p=p, elements=elements,list_initial=list_initial,rule="front",var_reduce="control")
+  X=c(X,result[1])
+  Y=c(Y,result[2])
+}
+estimator_raw=X #raw estimator(reordering)
+cat(paste('Mean of raw estimator: ', mean(estimator_raw), '\nVariance of raw estimator: ',var(estimator_raw)))
+
+```
+    
+Using **control variables** method:
+```{r}
+c=-cov(X,Y)/var(Y)
+estimator_control=X+c*(Y-50)
+#estimator (reordering), using move to the front rule, control variable method
+cat(paste('Mean of estimator using control variables: ', mean(estimator_control), '\nVariance of estimator using control variables: ',var(estimator_control)))
+```
+#### 4. (b)
+Using **antithetic variables** method:
+```{r}
+X={}
+X_anti={}
+for (j in 1:(n/2)){
+  result=list_problem_reorder(p=p, elements=elements,list_initial=list_initial,rule="front",var_reduce="antithetic")
+  X=c(X,result[1])
+  X_anti=c(X_anti,result[2])
+}
+estimator_anti=(X+X_anti)/2
+#estimator (reordering), using move to the front rule, antithetic variable method
+cat(paste('Mean of estimator using antithetic variables: ', mean(estimator_anti), '\nVariance of estimator using antithetic variables: ',var(estimator_anti)))
+```
+#### 4. (c)
+```{r}
+cat(paste('Variance reduction using control variables: ', paste(round(100*(var(estimator_raw)-var(estimator_control))/var(estimator_raw),2),"%", sep = "" ), '\nVariance reduction using antithetic variables: ',paste(round(100*(var(estimator_raw)-var(estimator_anti))/var(estimator_raw),2),"%", sep = "")))
+```
+
+**Antithetic variable method** gives greater variance reduction.
+
+### Problem 5
+*What conclusions can you draw about which variance reduction technique works best in this problem?*
+
+1. Reordering method doesn't help with variance reduction as much as method in the Ex 9i text does.      
+2. Antithetic variable method better helps with variance reduction than control variables method in all above scenarios.        
+3. Move to the front rule in problem 2 works better than interchange rule in problem 1. 
+                                    
+                                    
+**In conclusion, the best technique to reduce variance in this problem is what we tried in problem 2(b), which is:  **      
+***'Method in Ex 9i text without reordering' + 'Move to the front rule' + 'Antithetic variables method'.***  
